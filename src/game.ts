@@ -377,7 +377,17 @@ function genBoard(tier: number): BoardState {
     return variant(["T...T", "ttttt", "..22.", "sssss", "S...S"]);
   }
   if (tier === 4) {
-    return variant(["T...T.", "t1tttD", "..22.d", "sssssd", "S...SD"]);
+    return variant(["T...T.", "t2t1Dd", ".s22dd", "sssssd", "Ss..SD"]);
+  }
+  if (tier === 5) {
+    return variant([
+      "T...Tdd",
+      "t2t1tDd",
+      ".s22.dd",
+      ".sssSdd",
+      "ss..sdD",
+      "S....dd",
+    ]);
   }
   // Separate rows keep later channel routes independent and let the first
   // channel spend a continuous run of single-charge crystals.
