@@ -323,6 +323,14 @@ function parseBoard(lines: readonly string[]): BoardState {
   if (!channels.length) throw new Error("Board needs at least one channel");
   return { cols: lines[0]!.length, rows: lines.length, nodes };
 }
+function variant(lines: readonly string[]): BoardState {
+  const flipRows = Math.random() < 0.5;
+  const flipColumns = Math.random() < 0.5;
+  const oriented = flipRows ? [...lines].reverse() : [...lines];
+  return parseBoard(
+    oriented.map((line) => (flipColumns ? [...line].reverse().join("") : line)),
+  );
+}
 const beamsFor = (board: BoardState): BeamState[] =>
   CHANNELS.filter((c) => board.nodes.some((n) => n.channel === c)).map(
     (channel) => ({ channel, cells: [] }),
@@ -359,31 +367,37 @@ function genBoard(tier: number): BoardState {
   const lines = Array.from({ length: rows }, () =>
     Array.from({ length: cols }, () => "."),
   );
-  // Separate rows keep channel routes independent. The opening rung introduces
-  // a lens; later routes thread crystals or lenses in a single readable line.
+  if (tier === 1) {
+    return variant(["Ttt", "ttt", "ttT"]);
+  }
+  if (tier === 2) {
+    return variant(["Tttt", "ttTt", "Ssss", "ssSs"]);
+  }
+  if (tier === 3) {
+    return variant(["T...T", "ttttt", "..22.", "sssss", "S...S"]);
+  }
+  if (tier === 4) {
+    return variant(["T...T.", "t1tttD", "..22.d", "sssssd", "S...SD"]);
+  }
+  // Separate rows keep later channel routes independent and let the first
+  // channel spend a continuous run of single-charge crystals.
   channels.forEach((ch, ci) => {
     const r = ci;
     const e = ch === "triangle" ? "T" : ch === "square" ? "S" : "D";
-    if (tier === 1) {
-      lines[r]![0] = e;
-      for (let x = 1; x < cols - 1; x++) lines[r]![x] = "t";
-      lines[r]![cols - 1] = e;
-    } else {
-      lines[r]![0] = e;
-      lines[r]![cols - 1] = e;
-      for (let x = 1; x < cols - 1; x++) {
-        lines[r]![x] =
-          ci === 0 && spec.minCrystals > 0
-            ? "1"
-            : ch === "triangle"
-              ? "t"
-              : ch === "square"
-                ? "s"
-                : "d";
-      }
+    lines[r]![0] = e;
+    lines[r]![cols - 1] = e;
+    for (let x = 1; x < cols - 1; x++) {
+      lines[r]![x] =
+        ci === 0 && spec.minCrystals > 0
+          ? "1"
+          : ch === "triangle"
+            ? "t"
+            : ch === "square"
+              ? "s"
+              : "d";
     }
   });
-  return parseBoard(lines.map((row) => row.join("")));
+  return variant(lines.map((row) => row.join("")));
 }
 
 function applyPointer(
